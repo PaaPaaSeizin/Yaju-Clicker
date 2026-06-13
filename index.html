@@ -671,6 +671,9 @@ document.getElementById('shareTwitterBtn').onclick = () => {
 <!-- 以下を </body> の直前に追加（既存のスクリプトより後ろ） -->
 <div id="startOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:flex; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(4px);">
     <button id="startButton" style="background:#ffaa33; border:none; font-size:2rem; font-weight:bold; padding:16px 48px; border-radius:60px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:#2c2c2c;">▶ スタート</button>
+ <button id="helpButtonStatic" style="background:#3498db; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;">遊び方</button>
+    <div id="countdownDisplay" style="color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;"></div>
+</div>
     <div id="countdownDisplay" style="color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;"></div>
 </div>
 
@@ -900,6 +903,18 @@ document.getElementById('shareTwitterBtn').onclick = () => {
     };
     
     // ウインドウリサイズ時にステータスバーの高さが変わっても問題ない（次回 spawnPin で再取得）
+})();
+</script>
+<script>
+// 初期表示の「遊び方」ボタンにリンクを設定
+(function() {
+    const helpStatic = document.getElementById('helpButtonStatic');
+    if (helpStatic) {
+        helpStatic.onclick = (e) => {
+            e.preventDefault();
+            window.open('https://paapaaseizin.github.io/Yaju-Clicker/guide.html', '_blank');
+        };
+    }
 })();
 </script>
 </body>
