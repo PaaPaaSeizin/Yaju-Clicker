@@ -264,6 +264,20 @@
     const JUDGE_TEXTS = ["イキスギィ！", "やりますねぇ", "ンアーッ！", "ヌッ！"];
     const MISS_PENALTY_TEXT = "あ  ほ  く  さ";
 
+    // 音声再生関数
+function playSound(filename) {
+    try {
+        const audio = new Audio(filename);
+        audio.play().catch(e => console.log("音声再生エラー:", e));
+    } catch(e) { console.error(e); }
+}
+    // 音声のプリロード（オプション）
+const soundFiles = ['ikisugi.mp3', 'yarimasune.mp3', 'nna.mp3', 'nu.mp3'];
+soundFiles.forEach(file => {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = file;
+});
     // ゲーム状態
     let currentScore = 0;
     let currentHp = 10;
@@ -427,18 +441,22 @@ document.getElementById('shareTwitterBtn').onclick = () => {
         let points = 0;
         let judgeMsg = "";
         if (deltaSec < 0.3) {
-            points = NORMAL_POINTS[0];
-            judgeMsg = JUDGE_TEXTS[0];
-        } else if (deltaSec < 0.5) {
-            points = NORMAL_POINTS[1];
-            judgeMsg = JUDGE_TEXTS[1];
-        } else if (deltaSec < 0.7) {
-            points = NORMAL_POINTS[2];
-            judgeMsg = JUDGE_TEXTS[2];
-        } else {
-            points = NORMAL_POINTS[3];
-            judgeMsg = JUDGE_TEXTS[3];
-        }
+    points = NORMAL_POINTS[0];
+    judgeMsg = JUDGE_TEXTS[0];
+    playSound('ikisugi.mp3');          // ← 追加
+} else if (deltaSec < 0.5) {
+    points = NORMAL_POINTS[1];
+    judgeMsg = JUDGE_TEXTS[1];
+    playSound('yarimasune.mp3');       // ← 追加
+} else if (deltaSec < 0.7) {
+    points = NORMAL_POINTS[2];
+    judgeMsg = JUDGE_TEXTS[2];
+    playSound('nna.mp3');              // ← 追加
+} else {
+    points = NORMAL_POINTS[3];
+    judgeMsg = JUDGE_TEXTS[3];
+    playSound('nu.mp3');               // ← 追加
+}
         
         addPoints(points, clickX, clickY, judgeMsg);
         removePinElement(pinElem);
@@ -453,7 +471,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
         if (deltaSec < 1.0) {
             increaseHp(3, clickX, clickY);
         } else {
-            showFloatingText(clickX, clickY, "⏰ 遅すぎ…", "#777");
+            showFloatingText(clickX, clickY, "遅スギィ！", "#777");
         }
         removePinElement(pinElem);
     }
@@ -470,7 +488,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 reduceHp(1, centerX, centerY);
-                showFloatingText(centerX, centerY, "あほくさ (未クリック)", "#b22222");
+                showFloatingText(centerX, centerY, "あ ほ く さ (未クリック)", "#b22222");
             }
             pinElem.remove();
         }, AUTO_REMOVE_DELAY_MS);
