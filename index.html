@@ -755,11 +755,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
         btn.id = 'startButton';
         btn.style.cssText = 'background:#ffaa33; border:none; font-size:2rem; font-weight:bold; padding:16px 48px; border-radius:60px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:#2c2c2c;';
         btn.textContent = '▶ スタート';
-        const countdownDiv = document.createElement('div');
-        countdownDiv.id = 'countdownDisplay';
-        countdownDiv.style.cssText = 'color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;';
-        
-        // ヘルプボタンを追加
+                // ヘルプボタンを追加
         const helpBtn = document.createElement('button');
         helpBtn.textContent = '遊び方';
         helpBtn.style.cssText = 'background:#3498db; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;';
@@ -767,6 +763,10 @@ document.getElementById('shareTwitterBtn').onclick = () => {
             e.preventDefault();
             window.open('https://paapaaseizin.github.io/Yaju-Clicker/guide.html', '_blank');
         };
+        const countdownDiv = document.createElement('div');
+        countdownDiv.id = 'countdownDisplay';
+        countdownDiv.style.cssText = 'color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;';
+    
         overlay.appendChild(btn);
         overlay.appendChild(helpBtn); 
         overlay.appendChild(countdownDiv);
