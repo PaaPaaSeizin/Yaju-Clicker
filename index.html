@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>野獣先輩クリッカー</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: white;
+            font-family: 'Segoe UI', 'Helvetica Neue', 'Noto Sans JP', system-ui, sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            cursor: default;
+        }
+
+        /* ゲームメインコンテナ (相対配置の基準) */
+        .game-area {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;  /* 領域そのものはクリックさせない、中のピンは個別に有効 */
+        }
+
+        /* ピン共通スタイル */
+        .pin {
+            position: absolute;
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 215, 0, 0.3);
+            transition: transform 0.07s linear, filter 0.05s;
+            animation: pop-in 0.12s cubic-bezier(0.34, 1.2, 0.64, 1);
+            background: #f8f8f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            will-change: transform;
+        }
+
+        .pin:active {
+            transform: scale(0.92);
+            filter: brightness(0.96);
+        }
+
+        /* 画像を丸くキレイに収める */
+        .pin img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+            background: #eaeaea;
+        }
+
+        /* 出現アニメーション */
+        @keyframes pop-in {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* 上部ステータスバー */
+        .status-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 245, 220, 0.95);
+            backdrop-filter: blur(6px);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+            z-index: 200;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-bottom: 2px solid #ffb347;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .score-box, .hp-box, .rate-box {
+            background: #fff2e0;
+            padding: 6px 16px;
+            border-radius: 60px;
+            box-shadow: inset 0 1px 3px #0001, 0 2px 4px #ffdd99;
+        }
+
+        .score-box span, .hp-box span, .rate-box span {
+            color: #b45f1b;
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        .score-value, .hp-value, .rate-value {
+            color: #d35400;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .hp-value {
+            color: #c0392b;
+        }
+
+        button {
+            background: #ffa500;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 6px 20px;
+            border-radius: 48px;
+            cursor: pointer;
+            color: white;
+            transition: 0.1s linear;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: scale(0.96);
+            background: #e67e22;
+        }
+
+        .restart-btn {
+            background: #2c3e50;
+            margin-left: 12px;
+        }
+
+        .float-text {
+            position: fixed;
+            pointer-events: none;
+            font-weight: bold;
+            font-size: 1.4rem;
+            text-shadow: 0 0 3px white;
+            z-index: 500;
+            animation: floatFade 0.7s ease-out forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes floatFade {
+            0% {
+                opacity: 1;
+                transform: translateY(0px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.2);
+            }
+        }
+
+        /* 下部リザルトパネル */
+        .result-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 16px 20px;
+            color: #ffecb3;
+            text-align: center;
+            z-index: 400;
+            display: none;
+            border: 1px solid #ffaa44;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .result-panel p {
+            margin: 6px 0;
+            font-size: 1.1rem;
+        }
+        .result-panel .record-score {
+            font-size: 1.6rem;
+            color: gold;
+        }
+        .retry-button {
+            background: #ffaa33;
+            color: #2c2c2c;
+            margin-top: 10px;
+            padding: 8px 20px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .retry-button:active {
+            transform: scale(0.96);
+            background: #ff8811;
+        }
+
+        /* 小さな画面対応 */
+        @media (max-width: 600px) {
+            .pin { width: 70px; height: 70px; }
+            .status-bar { font-size: 0.9rem; padding: 8px 12px; }
+            .score-value, .hp-value { font-size: 1.3rem; }
+            .result-panel p { font-size: 0.9rem; }
+            .record-score { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="status-bar">
+    <div class="score-box">
+        <span>淫夢ポイント</span>
+        <span class="score-value" id="scoreDisplay">0.0</span>
+    </div>
+    <div class="hp-box">
+        <span>淫夢厨体力</span>
+        <span class="hp-value" id="hpDisplay">10</span>
+        <span> / 10+</span>
+    </div>
+    <div class="rate-box">
+        <span>汚染速度</span>
+        <span class="rate-value" id="rateDisplay">1.0</span>
+        <span> 個/秒</span>
+    </div>
+    <button id="restartButton" class="restart-btn">再挑戦 / リセット</button>
+</div>
+
+<div class="game-area" id="gameArea"></div>
+
+<!-- 下部リザルト＆再挑戦パネル -->
+<div id="resultPanel" class="result-panel">
+    <p>ゲイム終了</p>
+    <p>最終得点: <span id="finalScoreSpan" class="record-score">0</span></p>
+    <p>🏆 最高記録: <span id="bestScoreSpan">0</span></p>
+    <p>📊 平均秒速クリック数: <span id="avgClicksSpan">0.00</span> 回/秒</p>
+    <button id="retryButton" class="retry-button">再挑戦する</button>
+<!-- 結果パネル内、平均秒速クリック数の行の下などに追加 -->
+<button id="shareTwitterBtn" class="retry-button" style="background:#1DA1F2; color:white; margin-top:8px;">結果をツイート</button>
+</div>
+
+<script>
+    // ======================= 設定・定数 =======================
+    const PIN_SIZE = 88;
+    const BASE_INTERVAL_MS = 1000;
+    const SPAWN_SPEEDUP_INTERVAL_SEC = 10;
+    const AUTO_REMOVE_DELAY_MS = 1500;
+    const DOKATA_PROB = 1 / 20;
+    const NORMAL_POINTS = [1.0, 0.7, 0.5, 0.3];
+    const JUDGE_TEXTS = ["イキスギィ！", "やりますねぇ", "ンアーッ！", "ヌッ！"];
+    const MISS_PENALTY_TEXT = "あ  ほ  く  さ";
+
+    // ゲーム状態
+    let currentScore = 0;
+    let currentHp = 10;
+    let gameActive = true;
+    let currentRate = 1.0;               // 現在の発生速度 (個/秒)
+    let currentSpawnIntervalMs = 1000;   // 初期間隔
+
+    // タイマーID
+    let spawnIntervalId = null;
+    let speedUpTimerId = null;
+
+    // 統計用変数
+    let totalClicks = 0;                 // 成功クリック数（ピンを押した回数）
+    let gameStartTimestamp = 0;          // ゲーム開始時刻 (performance.now)
+    let bestScore = 0;                  // 最高得点 (localStorage)
+
+    // 画像リスト (yaju_01.jpg ... yaju_24.jpg)
+    const YAJU_NUMBERS = Array.from({ length: 24 }, (_, i) => String(i + 1).padStart(2, '0'));
+    function getRandomYajuImagePath() {
+        const randomNum = YAJU_NUMBERS[Math.floor(Math.random() * YAJU_NUMBERS.length)];
+        return `yaju_${randomNum}.jpg`;
+    }
+    const DOKATA_IMG_PATH = "dokata.jpg";
+
+    // DOM要素
+    const gameArea = document.getElementById('gameArea');
+    const scoreSpan = document.getElementById('scoreDisplay');
+    const hpSpan = document.getElementById('hpDisplay');
+    const rateSpan = document.getElementById('rateDisplay');
+    const restartBtn = document.getElementById('restartButton');
+    const resultPanel = document.getElementById('resultPanel');
+    const finalScoreSpan = document.getElementById('finalScoreSpan');
+    const bestScoreSpan = document.getElementById('bestScoreSpan');
+    const avgClicksSpan = document.getElementById('avgClicksSpan');
+    const retryBtn = document.getElementById('retryButton');
+
+    // 最高記録のロード & 保存
+    function loadBestScore() {
+        const stored = localStorage.getItem('yajuBestScore');
+        if (stored !== null) bestScore = parseFloat(stored);
+        else bestScore = 0;
+        bestScoreSpan.textContent = bestScore.toFixed(1);
+    }
+    function saveBestScore() {
+        if (currentScore > bestScore) {
+            bestScore = currentScore;
+            localStorage.setItem('yajuBestScore', bestScore.toFixed(1));
+            bestScoreSpan.textContent = bestScore.toFixed(1);
+        }
+    }
+
+    function updateUI() {
+        scoreSpan.textContent = currentScore.toFixed(1);
+        hpSpan.textContent = currentHp;
+        const currentRateVal = (1000 / currentSpawnIntervalMs).toFixed(2);
+        rateSpan.textContent = currentRateVal;
+    }
+
+    function showFloatingText(x, y, text, color = "#ff5722") {
+        const floatDiv = document.createElement('div');
+        floatDiv.className = 'float-text';
+        floatDiv.textContent = text;
+        floatDiv.style.left = (x - 30) + 'px';
+        floatDiv.style.top = (y - 40) + 'px';
+        floatDiv.style.color = color;
+        floatDiv.style.fontWeight = 'bold';
+        floatDiv.style.fontSize = '1.35rem';
+        floatDiv.style.textShadow = '0 0 5px white';
+        document.body.appendChild(floatDiv);
+        setTimeout(() => floatDiv.remove(), 700);
+    }
+
+    function endGame() {
+        if (!gameActive) return;
+        gameActive = false;
+        // タイマー停止
+        if (spawnIntervalId) {
+            clearInterval(spawnIntervalId);
+            spawnIntervalId = null;
+        }
+        if (speedUpTimerId) {
+            clearInterval(speedUpTimerId);
+            speedUpTimerId = null;
+        }
+        // 全てのピンを削除
+        const allPins = document.querySelectorAll('.pin');
+        allPins.forEach(pin => {
+            if (pin.timeoutId) clearTimeout(pin.timeoutId);
+            pin.remove();
+        });
+        
+        // ---- 下側パネルに記録を表示 (浮かぶメッセージは廃止) ----
+        const durationSec = (performance.now() - gameStartTimestamp) / 1000;
+        const avgClicks = durationSec > 0 ? (totalClicks / durationSec) : 0;
+        finalScoreSpan.textContent = currentScore.toFixed(1);
+        avgClicksSpan.textContent = avgClicks.toFixed(2);
+        // 最高記録更新
+        saveBestScore();
+        // パネル表示
+        resultPanel.style.display = 'block';
+// ゲーム終了時（endGame 関数の最後など）に、共有ボタンのツイート内容を更新
+const tweetText = `@_TOUKETUSINAIDE 私の野獣先輩駆除回数は${totalClicks}回でした！ https://paapaaseizin.github.io/Yaju-Clicker`;
+const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&hashtags=野獣先輩クリッカー&`;
+
+// ボタンにクリックでそのURLを開くよう設定
+document.getElementById('shareTwitterBtn').onclick = () => {
+    window.open(shareUrl, '_blank', 'width=550,height=420');
+};
+    }
+
+    function reduceHp(amount = 1, clickX = null, clickY = null) {
+        if (!gameActive) return false;
+        currentHp = Math.max(0, currentHp - amount);
+        updateUI();
+        if (clickX && clickY) {
+            showFloatingText(clickX, clickY, `-${amount} HP`, "#aa2e1e");
+        }
+        if (currentHp <= 0) {
+            endGame();
+            return false;
+        }
+        return true;
+    }
+
+    function increaseHp(amount, x, y) {
+        if (!gameActive) return;
+        currentHp += amount;
+        updateUI();
+        showFloatingText(x, y, `+${amount} HP`, "#2e7d32");
+    }
+
+    function addPoints(points, x, y, judgeText) {
+        if (!gameActive) return;
+        currentScore += points;
+        updateUI();
+        showFloatingText(x, y, `${judgeText} +${points.toFixed(1)}`, "#f39c12");
+    }
+
+    function removePinElement(pinElem) {
+        if (pinElem && pinElem.timeoutId) {
+            clearTimeout(pinElem.timeoutId);
+            pinElem.timeoutId = null;
+        }
+        if (pinElem && pinElem.parentNode) pinElem.remove();
+    }
+
+    // ★ 通常ピン: mousedown で判定
+    function handleNormalPinStart(pinElem, creationTime, clickX, clickY) {
+        if (!gameActive) return;
+        totalClicks++;  // クリック成功数を記録
+        const now = performance.now();
+        const deltaSec = (now - creationTime) / 1000;
+        
+        if (deltaSec >= 1.0) {
+            reduceHp(1, clickX, clickY);
+            showFloatingText(clickX, clickY, MISS_PENALTY_TEXT, "#8b4513");
+            removePinElement(pinElem);
+            return;
+        }
+        
+        let points = 0;
+        let judgeMsg = "";
+        if (deltaSec < 0.3) {
+            points = NORMAL_POINTS[0];
+            judgeMsg = JUDGE_TEXTS[0];
+        } else if (deltaSec < 0.5) {
+            points = NORMAL_POINTS[1];
+            judgeMsg = JUDGE_TEXTS[1];
+        } else if (deltaSec < 0.7) {
+            points = NORMAL_POINTS[2];
+            judgeMsg = JUDGE_TEXTS[2];
+        } else {
+            points = NORMAL_POINTS[3];
+            judgeMsg = JUDGE_TEXTS[3];
+        }
+        
+        addPoints(points, clickX, clickY, judgeMsg);
+        removePinElement(pinElem);
+    }
+    
+    // ★ ドカタピン: mousedown で判定
+    function handleDokataPinStart(pinElem, creationTime, clickX, clickY) {
+        if (!gameActive) return;
+        totalClicks++;  // クリック成功数を記録
+        const now = performance.now();
+        const deltaSec = (now - creationTime) / 1000;
+        if (deltaSec < 1.0) {
+            increaseHp(3, clickX, clickY);
+        } else {
+            showFloatingText(clickX, clickY, "⏰ 遅すぎ…", "#777");
+        }
+        removePinElement(pinElem);
+    }
+
+    function setupAutoRemoval(pinElem, isDokata) {
+        const timeoutId = setTimeout(() => {
+            if (!pinElem || !pinElem.parentNode) return;
+            if (!gameActive) {
+                pinElem.remove();
+                return;
+            }
+            if (!isDokata && gameActive) {
+                const rect = pinElem.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                reduceHp(1, centerX, centerY);
+                showFloatingText(centerX, centerY, "あほくさ (未クリック)", "#b22222");
+            }
+            pinElem.remove();
+        }, AUTO_REMOVE_DELAY_MS);
+        pinElem.timeoutId = timeoutId;
+    }
+
+    function spawnPin() {
+        if (!gameActive) return;
+        
+        const maxLeft = Math.max(20, window.innerWidth - PIN_SIZE - 10);
+        let left = Math.random() * maxLeft;
+        let top = 30 + Math.random() * Math.max(20, window.innerHeight - PIN_SIZE - 100);
+        top = Math.min(top, window.innerHeight - PIN_SIZE - 15);
+        left = Math.min(left, window.innerWidth - PIN_SIZE - 10);
+        left = Math.max(8, left);
+        top = Math.max(50, top);
+        
+        const isDokata = Math.random() < DOKATA_PROB;
+        const pinDiv = document.createElement('div');
+        pinDiv.className = 'pin';
+        pinDiv.style.left = left + 'px';
+        pinDiv.style.top = top + 'px';
+        
+        const img = document.createElement('img');
+        if (isDokata) {
+            img.src = DOKATA_IMG_PATH;
+            img.alt = "dokata";
+            img.onerror = () => { img.src = 'https://placehold.co/400x400?text=dokata'; };
+        } else {
+            const normalImgPath = getRandomYajuImagePath();
+            img.src = normalImgPath;
+            img.alt = "yaju";
+            img.onerror = () => { img.style.background = "#c0a080"; };
+        }
+        pinDiv.appendChild(img);
+        
+        const creationTime = performance.now();
+        pinDiv.dataset.created = creationTime;
+        pinDiv.dataset.isDokata = isDokata ? "true" : "false";
+        
+        setupAutoRemoval(pinDiv, isDokata);
+        
+        // mousedown / touchstart で即時判定
+        const onPointerStart = (e) => {
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            e.stopPropagation();
+            if (!gameActive) return;
+            if (!pinDiv.parentNode) return;
+            
+            const rect = pinDiv.getBoundingClientRect();
+            if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
+            
+            const clickX = rect.left + rect.width / 2;
+            const clickY = rect.top + rect.height / 2;
+            const isSpecial = pinDiv.dataset.isDokata === "true";
+            const timeCreated = parseFloat(pinDiv.dataset.created);
+            
+            if (isSpecial) {
+                handleDokataPinStart(pinDiv, timeCreated, clickX, clickY);
+            } else {
+                handleNormalPinStart(pinDiv, timeCreated, clickX, clickY);
+            }
+        };
+        
+        pinDiv.addEventListener('mousedown', onPointerStart);
+        pinDiv.addEventListener('touchstart', onPointerStart, { passive: false });
+        
+        gameArea.appendChild(pinDiv);
+    }
+    
+    function updateSpawnInterval() {
+        if (!gameActive) return;
+        if (spawnIntervalId) {
+            clearInterval(spawnIntervalId);
+            spawnIntervalId = null;
+        }
+        let newInterval = 1000 / currentRate;
+        if (newInterval < 20) newInterval = 20;
+        currentSpawnIntervalMs = newInterval;
+        spawnIntervalId = setInterval(() => {
+            spawnPin();
+        }, currentSpawnIntervalMs);
+        updateUI();
+    }
+    
+    function accelerateGameSpeed() {
+        if (!gameActive) return;
+        currentRate += 0.5;
+        updateSpawnInterval();
+        updateUI();
+        const newRate = (1000 / currentSpawnIntervalMs).toFixed(1);
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'float-text';
+        msgDiv.textContent = `⚡ 発生速度UP! ${newRate} 個/秒 ⚡`;
+        msgDiv.style.left = '30%';
+        msgDiv.style.top = '70px';
+        msgDiv.style.color = '#e67e22';
+        msgDiv.style.fontSize = '1rem';
+        msgDiv.style.backgroundColor = '#fff3cf';
+        msgDiv.style.padding = '4px 12px';
+        msgDiv.style.borderRadius = '40px';
+        msgDiv.style.whiteSpace = 'nowrap';
+        document.body.appendChild(msgDiv);
+        setTimeout(() => msgDiv.remove(), 1800);
+    }
+    
+    function resetGame() {
+        gameActive = false;
+        if (spawnIntervalId) {
+            clearInterval(spawnIntervalId);
+            spawnIntervalId = null;
+        }
+        if (speedUpTimerId) {
+            clearInterval(speedUpTimerId);
+            speedUpTimerId = null;
+        }
+        const allPins = document.querySelectorAll('.pin');
+        allPins.forEach(pin => {
+            if (pin.timeoutId) clearTimeout(pin.timeoutId);
+            pin.remove();
+        });
+        
+        // 状態リセット
+        currentScore = 0;
+        currentHp = 10;
+        currentRate = 1.0;
+        currentSpawnIntervalMs = 1000;
+        totalClicks = 0;
+        gameStartTimestamp = performance.now();
+        gameActive = true;
+        
+        // UI再構築
+        updateUI();
+        updateSpawnInterval();
+        
+        speedUpTimerId = setInterval(() => {
+            accelerateGameSpeed();
+        }, SPAWN_SPEEDUP_INTERVAL_SEC * 1000);
+        
+        // リザルトパネルを隠す
+        resultPanel.style.display = 'none';
+        
+        // 演出メッセージ
+        const restartMsg = document.createElement('div');
+        restartMsg.className = 'float-text';
+        restartMsg.textContent = '🔥 やりますねぇ！(再挑戦) 🔥';
+        restartMsg.style.left = '40%';
+        restartMsg.style.top = '100px';
+        restartMsg.style.color = '#f39c12';
+        restartMsg.style.background = '#fff0d0';
+        restartMsg.style.padding = '4px 16px';
+        restartMsg.style.borderRadius = '40px';
+        document.body.appendChild(restartMsg);
+        setTimeout(() => restartMsg.remove(), 1500);
+    }
+    
+    function initGame() {
+        gameActive = true;
+        currentScore = 0;
+        currentHp = 10;
+        currentRate = 1.0;
+        currentSpawnIntervalMs = 1000;
+        totalClicks = 0;
+        gameStartTimestamp = performance.now();
+        updateUI();
+        if (spawnIntervalId) clearInterval(spawnIntervalId);
+        if (speedUpTimerId) clearInterval(speedUpTimerId);
+        updateSpawnInterval();
+        speedUpTimerId = setInterval(() => {
+            accelerateGameSpeed();
+        }, SPAWN_SPEEDUP_INTERVAL_SEC * 1000);
+        resultPanel.style.display = 'none';
+        loadBestScore();
+    }
+    
+    // 既存の再起動ボタン
+    restartBtn.addEventListener('click', () => {
+        resetGame();
+    });
+    // 下部の再挑戦ボタン
+    retryBtn.addEventListener('click', () => {
+        resetGame();
+    });
+    
+    window.addEventListener('resize', () => {});
+    
+    initGame();
+    console.log("あなたはなにをしにきたの？");
+</script>
+<!-- 以下を </body> の直前に追加（既存のスクリプトより後ろ） -->
+<div id="startOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:flex; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(4px);">
+    <button id="startButton" style="background:#ffaa33; border:none; font-size:2rem; font-weight:bold; padding:16px 48px; border-radius:60px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:#2c2c2c;">▶ スタート</button>
+    <div id="countdownDisplay" style="color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;"></div>
+</div>
+
+<script>
+// 追加機能: スタートボタンと3秒カウントダウン（既存コードは一切変更しません）
+// さらに、再挑戦時も同じカウントダウンを経由するよう resetGame を上書き
+// さらに、ページ読み込み直後にゲームを強制停止し、カウントダウン中は動作しないようにする
+// さらに、ピンがステータスバーに重ならないように spawnPin を上書き
+(function() {
+    // ========== 1. 即座にゲームを停止（カウントダウン中は動かさない） ==========
+    if (typeof spawnIntervalId !== 'undefined' && spawnIntervalId) {
+        clearInterval(spawnIntervalId);
+        spawnIntervalId = null;
+    }
+    if (typeof speedUpTimerId !== 'undefined' && speedUpTimerId) {
+        clearInterval(speedUpTimerId);
+        speedUpTimerId = null;
+    }
+    // 全てのピンを削除
+    const allPins = document.querySelectorAll('.pin');
+    allPins.forEach(pin => {
+        if (pin.timeoutId) clearTimeout(pin.timeoutId);
+        pin.remove();
+    });
+    // ゲームを非アクティブに
+    if (typeof gameActive !== 'undefined') gameActive = false;
+    // リザルトパネルを非表示に（念のため）
+    const rp = document.getElementById('resultPanel');
+    if (rp) rp.style.display = 'none';
+
+    // ========== 2. ゲーム開始関数（カウントダウン後に呼ばれる） ==========
+    function _startGameEngine() {
+        // 既存の状態を完全リセットしてゲームを動かす（resetGame とほぼ同等だが、再帰防止）
+        if (typeof spawnIntervalId !== 'undefined' && spawnIntervalId) {
+            clearInterval(spawnIntervalId);
+            spawnIntervalId = null;
+        }
+        if (typeof speedUpTimerId !== 'undefined' && speedUpTimerId) {
+            clearInterval(speedUpTimerId);
+            speedUpTimerId = null;
+        }
+        const pins = document.querySelectorAll('.pin');
+        pins.forEach(pin => {
+            if (pin.timeoutId) clearTimeout(pin.timeoutId);
+            pin.remove();
+        });
+        
+        if (typeof currentScore !== 'undefined') currentScore = 0;
+        if (typeof currentHp !== 'undefined') currentHp = 10;
+        if (typeof currentRate !== 'undefined') currentRate = 1.0;
+        if (typeof currentSpawnIntervalMs !== 'undefined') currentSpawnIntervalMs = 1000;
+        if (typeof totalClicks !== 'undefined') totalClicks = 0;
+        if (typeof gameStartTimestamp !== 'undefined') gameStartTimestamp = performance.now();
+        if (typeof gameActive !== 'undefined') gameActive = true;
+        if (typeof updateUI === 'function') updateUI();
+        if (typeof updateSpawnInterval === 'function') updateSpawnInterval();
+        if (typeof speedUpTimerId !== 'undefined') {
+            if (speedUpTimerId) clearInterval(speedUpTimerId);
+            speedUpTimerId = setInterval(() => {
+                if (typeof accelerateGameSpeed === 'function') accelerateGameSpeed();
+            }, 10000);
+        }
+        if (typeof resultPanel !== 'undefined') resultPanel.style.display = 'none';
+        if (typeof loadBestScore === 'function') loadBestScore();
+    }
+
+    // ========== 3. カウントダウン付きゲーム起動（汎用） ==========
+    let countdownActive = false;
+    function startCountdownAndGame() {
+        if (countdownActive) return;
+        countdownActive = true;
+        
+        // 既存のオーバーレイがあれば削除
+        const existingOverlay = document.getElementById('startOverlay');
+        if (existingOverlay) existingOverlay.remove();
+        
+        // 新しいオーバーレイ作成
+        const overlay = document.createElement('div');
+        overlay.id = 'startOverlay';
+        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:flex; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(4px);';
+        const btn = document.createElement('button');
+        btn.id = 'startButton';
+        btn.style.cssText = 'background:#ffaa33; border:none; font-size:2rem; font-weight:bold; padding:16px 48px; border-radius:60px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:#2c2c2c;';
+        btn.textContent = '▶ スタート';
+        const countdownDiv = document.createElement('div');
+        countdownDiv.id = 'countdownDisplay';
+        countdownDiv.style.cssText = 'color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;';
+        overlay.appendChild(btn);
+        overlay.appendChild(countdownDiv);
+        document.body.appendChild(overlay);
+        
+        let count = 3;
+        countdownDiv.textContent = count;
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownDiv.textContent = count;
+            } else if (count === 0) {
+                countdownDiv.textContent = 'GO!!';
+                clearInterval(interval);
+                setTimeout(() => {
+                    overlay.remove();
+                    _startGameEngine();
+                    countdownActive = false;
+                }, 300);
+            }
+        }, 1000);
+        
+        btn.addEventListener('click', (e) => e.preventDefault());
+    }
+
+    // ========== 4. 再挑戦用に resetGame を上書き ==========
+    if (typeof resetGame !== 'undefined') {
+        const originalResetGame = resetGame;
+        window.resetGame = function() {
+            if (countdownActive) return;
+            if (document.getElementById('startOverlay')) return;
+            startCountdownAndGame();
+        };
+        // 既存のボタンイベントはそのまま（上書きした resetGame が呼ばれる）
+    }
+
+    // ========== 5. 初回スタートボタンの処理 ==========
+    const startBtn = document.getElementById('startButton');
+    const existingOverlay = document.getElementById('startOverlay');
+    if (startBtn && existingOverlay) {
+        const originalHandler = () => {
+            startCountdownAndGame();
+        };
+        startBtn.removeEventListener('click', originalHandler);
+        startBtn.addEventListener('click', originalHandler);
+    }
+
+    // ========== 6. ピンがステータスバーに重ならないように spawnPin を上書き ==========
+    const originalSpawnPin = spawnPin;
+    window.spawnPin = function() {
+        if (!gameActive) return;
+        
+        // ステータスバーの高さを取得（動的に変化しても対応）
+        const statusBar = document.querySelector('.status-bar');
+        let statusBarHeight = 80; // デフォルト
+        if (statusBar) {
+            statusBarHeight = statusBar.offsetHeight;
+        }
+        const minTop = statusBarHeight + 10; // 10px の余裕
+        
+        const maxLeft = Math.max(20, window.innerWidth - PIN_SIZE - 10);
+        let left = Math.random() * maxLeft;
+        // top の範囲をステータスバーの下から画面下端 - PIN_SIZE まで
+        let top = minTop + Math.random() * Math.max(20, window.innerHeight - PIN_SIZE - minTop - 20);
+        top = Math.min(top, window.innerHeight - PIN_SIZE - 15);
+        left = Math.min(left, window.innerWidth - PIN_SIZE - 10);
+        left = Math.max(8, left);
+        top = Math.max(minTop, top);
+        
+        const isDokata = Math.random() < DOKATA_PROB;
+        const pinDiv = document.createElement('div');
+        pinDiv.className = 'pin';
+        pinDiv.style.left = left + 'px';
+        pinDiv.style.top = top + 'px';
+        
+        const img = document.createElement('img');
+        if (isDokata) {
+            img.src = DOKATA_IMG_PATH;
+            img.alt = "dokata";
+            img.onerror = () => { img.src = 'https://placehold.co/400x400?text=dokata'; };
+        } else {
+            const normalImgPath = getRandomYajuImagePath();
+            img.src = normalImgPath;
+            img.alt = "yaju";
+            img.onerror = () => { img.style.background = "#c0a080"; };
+        }
+        pinDiv.appendChild(img);
+        
+        const creationTime = performance.now();
+        pinDiv.dataset.created = creationTime;
+        pinDiv.dataset.isDokata = isDokata ? "true" : "false";
+        
+        setupAutoRemoval(pinDiv, isDokata);
+        
+        const onPointerStart = (e) => {
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            e.stopPropagation();
+            if (!gameActive) return;
+            if (!pinDiv.parentNode) return;
+            
+            const rect = pinDiv.getBoundingClientRect();
+            if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
+            
+            const clickX = rect.left + rect.width / 2;
+            const clickY = rect.top + rect.height / 2;
+            const isSpecial = pinDiv.dataset.isDokata === "true";
+            const timeCreated = parseFloat(pinDiv.dataset.created);
+            
+            if (isSpecial) {
+                handleDokataPinStart(pinDiv, timeCreated, clickX, clickY);
+            } else {
+                handleNormalPinStart(pinDiv, timeCreated, clickX, clickY);
+            }
+        };
+        
+        pinDiv.addEventListener('mousedown', onPointerStart);
+        pinDiv.addEventListener('touchstart', onPointerStart, { passive: false });
+        
+        gameArea.appendChild(pinDiv);
+    };
+    
+    // ウインドウリサイズ時にステータスバーの高さが変わっても問題ない（次回 spawnPin で再取得）
+})();
+</script>
+</body>
+</html>
