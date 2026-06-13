@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>遊び方 - 野獣先輩クリッカー</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #fef7e0;
+            font-family: 'Segoe UI', 'Helvetica Neue', 'Noto Sans JP', system-ui, sans-serif;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .help-container {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 48px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #ffd966;
+        }
+        .help-header {
+            background: #ffaa33;
+            padding: 24px 20px;
+            text-align: center;
+            color: #2c2c2c;
+        }
+        .help-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+        .help-header p {
+            margin: 8px 0 0;
+            opacity: 0.9;
+        }
+        .help-content {
+            padding: 24px 28px;
+        }
+        .rule-block {
+            background: #fff6e8;
+            border-radius: 32px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border-left: 8px solid #ffaa33;
+        }
+        .rule-block h2 {
+            margin: 0 0 8px;
+            font-size: 1.5rem;
+            color: #b45f1b;
+        }
+        .rule-block p, .rule-block li {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #3e2a1f;
+        }
+        .judge-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff2e0;
+            border-radius: 24px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        .judge-table th, .judge-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ffdd99;
+        }
+        .judge-table th {
+            background: #ffdd99;
+            color: #7a3e0e;
+        }
+        .badge {
+            display: inline-block;
+            background: #2c3e50;
+            color: white;
+            border-radius: 40px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .footer-btn {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .back-button {
+            background: #ffaa33;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 12px 32px;
+            border-radius: 60px;
+            cursor: pointer;
+            color: #2c2c2c;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: 0.1s linear;
+        }
+        .back-button:active {
+            transform: scale(0.96);
+        }
+        @media (max-width: 550px) {
+            .help-content { padding: 18px; }
+            .rule-block h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="help-container">
+    <div class="help-header">
+        <h1>遊び方ガイド</h1>
+        <p>野獣先輩クリッカーへようこ↑そ↓</p>
+    </div>
+    <div class="help-content">
+        <div class="rule-block">
+            <h2>ゲイムの基本</h2>
+            <p>次々と汚染してくる野獣ちゃんをタップ/クリックで駆除して<strong>淫夢ポイント</strong>を稼ぐんだゾ<br>
+            淫夢厨(お ま え)の体力が0になるまでに、どれだけ多くのポイントを獲得できるかが勝負だゾ。</p>
+        </div>
+
+        <div class="rule-block">
+            <h2>基本操作</h2>
+            <p>▶ 画面に現れる丸いピン（野獣ちゃん）を <strong>押す（マウスダウン / タッチ）</strong> だけで反応するゾ。<br>
+            ▶ ピンは汚染してから<strong>約1.5秒</strong>で消えるので、素早く押すゾ。ホモガキのお前なら当たり前だよなぁ？</p>
+        </div>
+
+        <div class="rule-block">
+            <h2>タイミング判定とポイント</h2>
+            <p>汚染してから駆除までの時間によって、もらえるポイントと評価が違うゾ</p>
+            <table class="judge-table">
+                <thead>
+                    <tr><th>押す速さ</th><th>判定</th><th>獲得ポイント</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>0.3秒未満</td><td>イキスギィ！</td><td>+1.0 pt</td></tr>
+                    <tr><td>0.5秒未満</td><td>やりますねぇ</td><td>+0.7 pt</td></tr>
+                    <tr><td>0.7秒未満</td><td>ンアーッ！</td><td>+0.5 pt</td></tr>
+                    <tr><td>1.0秒未満</td><td>ヌッ！</td><td>+0.3 pt</td></tr>
+                    <tr><td>1.0秒以上</td><td>あほくさ</td><td>HP -1 (ペナルティ)</td></tr>
+                </tbody>
+            </table>
+            <p>💡 <strong>1秒以上経ってから押すか、完全にクリックしなかった場合は体力が減るゾ</strong></p>
+        </div>
+
+        <div class="rule-block">
+            <h2>変態糞土方（回復アイテム）</h2>
+            <p>⭐ ごく稀に（20分の1の確率）金色に輝く<strong>変態糞土方</strong>が出現するゾ<br>
+            ➕ このピンを <strong>1秒以内</strong> に押すと <strong>HPが3回復</strong>だゾ<br>
+            ※ 1秒過ぎると効果はないゾ(ペナルティもないゾ)</p>
+        </div>
+
+        <div class="rule-block">
+            <h2>体力システム</h2>
+            <p>初期体力は <strong>10</strong> だゾ</p>
+            <ul>
+                <li>❌ ピンを <strong>1秒以上経過してから押す / 全く押せずに消える</strong> → HP -1</li>
+                <li>✅ 変態糞土方を1秒以内に押す → HP +3</li>
+                <li>⚠️ HPが0になるとゲーム終了。最終結果が表示されるゾ</li>
+            </ul>
+        </div>
+
+        <div class="rule-block">
+            <h2>発生速度（汚染速度）</h2>
+            <p>ゲーム開始時は <strong>1個/秒</strong> のペースでピンが出現するゾ。<br>
+            🔥 10秒ごとに <strong>+0.5個/秒</strong> ずつ出現速度が上がっていくゾ<br>
+            画面上部の「汚染速度」で現在の発生頻度を確認できるゾ</p>
+        </div>
+
+        <div class="rule-block">
+            <h2>記録＆再挑戦</h2>
+            <p>ゲームオーバーになると、<strong>最終得点・最高記録・平均秒速クリック数</strong>が画面下に表示されるゾ<br>
+            「再挑戦する」ボタンでいつでもリトライ可能だゾ スタート前のカウントダウンから始まるゾ</p>
+        </div>
+
+        <div class="rule-block">
+            <h2>ツイート機能</h2>
+            <p>ゲーム終了後、「結果をツイート」ボタンであなたの<strong>野獣先輩駆除回数（クリック成功数）</strong>を弱小なTwitterアカウントで自慢するゾbr>
+            ※ ハッシュタグ <strong>#野獣先輩クリッカー</strong> 付きで投稿されるゾ</p>
+        </div>
+
+        <div class="footer-btn">
+            <button class="back-button" onclick="window.close()">ゲームに戻る</button>
+        </div>
+        <p style="text-align: center; font-size: 0.75rem; color: #ad8b62;">ここまで見てるノンケはなんなんですか...</p>
+    </div>
+</div>
+<script>
+    // 「閉じる」の代替として、何らかの理由で window.close が効かない時はページを戻る
+    document.querySelector('.back-button').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (history.length > 1) {
+            history.back();
+        } else {
+            window.location.href = 'https://paapaaseizin.github.io/Yaju-Clicker/';
+        }
+    });
+</script>
+</body>
+</html>
