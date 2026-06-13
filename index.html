@@ -917,5 +917,40 @@ document.getElementById('shareTwitterBtn').onclick = () => {
     }
 })();
 </script>
+    <script>
+// 画像プリロード機能（スタート前に全画像をキャッシュ）
+(function() {
+    const imageList = [];
+    // yaju_01.jpg ～ yaju_24.jpg
+    for (let i = 1; i <= 24; i++) {
+        const num = String(i).padStart(2, '0');
+        imageList.push(`yaju_${num}.jpg`);
+    }
+    // dokata.jpg
+    imageList.push('dokata.jpg');
+    
+    let loadedCount = 0;
+    const total = imageList.length;
+    
+    function preloadImages(urls) {
+        urls.forEach(url => {
+            const img = new Image();
+            img.onload = () => {
+                loadedCount++;
+                if (loadedCount === total) {
+                    console.log('全ての画像をプリロード完了');
+                }
+            };
+            img.onerror = () => {
+                console.warn(`プリロード失敗: ${url}`);
+                loadedCount++;
+            };
+            img.src = url;
+        });
+    }
+    
+    preloadImages(imageList);
+})();
+</script>
 </body>
 </html>
