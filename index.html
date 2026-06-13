@@ -758,6 +758,15 @@ document.getElementById('shareTwitterBtn').onclick = () => {
         const countdownDiv = document.createElement('div');
         countdownDiv.id = 'countdownDisplay';
         countdownDiv.style.cssText = 'color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;';
+        
+        // ヘルプボタンを追加
+        const helpBtn = document.createElement('button');
+        helpBtn.textContent = '遊び方';
+        helpBtn.style.cssText = 'background:#3498db; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;';
+        helpBtn.onclick = (e) => {
+            e.preventDefault();
+            window.open('https://paapaaseizin.github.io/Yaju-Clicker/guide.html', '_blank');
+        };
         overlay.appendChild(btn);
         overlay.appendChild(countdownDiv);
         document.body.appendChild(overlay);
