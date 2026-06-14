@@ -272,7 +272,7 @@ function playSound(filename) {
     } catch(e) { console.error(e); }
 }
     // 音声のプリロード（オプション）
-const soundFiles = ['ikisugi.mp3', 'yarimasune.mp3', 'nna.mp3', 'yattaze.mp3', 'nu.mp3'];
+const soundFiles = ['ikisugi.mp3', 'yarimasune.mp3', 'nna.mp3', 'yattaze.mp3', 'nu.mp3', 'dededon.mp3'];
 soundFiles.forEach(file => {
     const audio = new Audio();
     audio.preload = 'auto';
@@ -386,6 +386,7 @@ const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twe
 document.getElementById('shareTwitterBtn').onclick = () => {
     window.open(shareUrl, '_blank', 'width=550,height=420');
 };
+        playSound('dededon.mp3');
     }
 
     function reduceHp(amount = 1, clickX = null, clickY = null) {
@@ -396,7 +397,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
             showFloatingText(clickX, clickY, `-${amount} HP`, "#aa2e1e");
         }
         if (currentHp <= 0) {
-            endGame();
+            ();
             return false;
         }
         return true;
