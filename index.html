@@ -272,7 +272,7 @@ function playSound(filename) {
     } catch(e) { console.error(e); }
 }
     // 音声のプリロード（オプション）
-const soundFiles = ['ikisugi.mp3', 'yarimasune.mp3', 'nna.mp3', 'nu.mp3'];
+const soundFiles = ['ikisugi.mp3', 'yarimasune.mp3', 'nna.mp3', 'yattaze.mp3', 'nu.mp3'];
 soundFiles.forEach(file => {
     const audio = new Audio();
     audio.preload = 'auto';
@@ -470,6 +470,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
         const deltaSec = (now - creationTime) / 1000;
         if (deltaSec < 1.0) {
             increaseHp(3, clickX, clickY);
+            playSound('yattaze.mp3');  
         } else {
             showFloatingText(clickX, clickY, "遅スギィ！", "#777");
         }
