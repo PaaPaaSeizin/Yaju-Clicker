@@ -238,6 +238,7 @@
         <span> 個/秒</span>
     </div>
     <button id="restartButton" class="restart-btn">再挑戦 / リセット</button>
+    <button id="soundToggleBtn" style="background:#555; border:none; font-size:1rem; font-weight:bold; padding:6px 20px; border-radius:48px; cursor:pointer; color:white; box-shadow:0 2px 6px rgba(0,0,0,0.2);">ボイスON</button>
 </div>
 
 <div class="game-area" id="gameArea"></div>
@@ -264,11 +265,35 @@
     const JUDGE_TEXTS = ["イキスギィ！", "やりますねぇ", "ンアーッ！", "ヌッ！"];
     const MISS_PENALTY_TEXT = "あ  ほ  く  さ";
 
+    // 現在再生中の音声インスタンスを管理する配列
+let playingSounds = [];
+
+// 全ての音声を停止する関数
+function stopAllSounds() {
+    for (let i = 0; i < playingSounds.length; i++) {
+        const audio = playingSounds[i];
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    }
+    playingSounds = []; // 配列をクリア
+}
+
+    // 音量オンオフフラグ（デフォルトON）
+let soundEnabled = false;
     // 音声再生関数
 function playSound(filename) {
+    if (!soundEnabled) return; // 音量オフ機能がある場合はこの行を追加（なければ不要）
     try {
         const audio = new Audio(filename);
+        playingSounds.push(audio);  // 配列に追加
         audio.play().catch(e => console.log("音声再生エラー:", e));
+        // 再生終了時に配列から削除
+        audio.onended = () => {
+            const index = playingSounds.indexOf(audio);
+            if (index !== -1) playingSounds.splice(index, 1);
+        };
     } catch(e) { console.error(e); }
 }
     // 音声のプリロード（オプション）
@@ -701,10 +726,12 @@ document.getElementById('shareTwitterBtn').onclick = () => {
 // さらに、ページ読み込み直後にゲームを強制停止し、カウントダウン中は動作しないようにする
 // さらに、ピンがステータスバーに重ならないように spawnPin を上書き
 (function() {
-    // ========== 1. 即座にゲームを停止（カウントダウン中は動かさない） ==========
+    // ========== 1. 即座にゲームを停止 ==========
+    stopAllSounds(); // ← 追加
     if (typeof spawnIntervalId !== 'undefined' && spawnIntervalId) {
         clearInterval(spawnIntervalId);
         spawnIntervalId = null;
+
     }
     if (typeof speedUpTimerId !== 'undefined' && speedUpTimerId) {
         clearInterval(speedUpTimerId);
@@ -761,8 +788,10 @@ document.getElementById('shareTwitterBtn').onclick = () => {
     // ========== 3. カウントダウン付きゲーム起動（汎用） ==========
     let countdownActive = false;
     function startCountdownAndGame() {
-        if (countdownActive) return;
-        countdownActive = true;
+    if (countdownActive) return;
+    stopAllSounds(); // ← ここに追加
+    countdownActive = true;
+
         
         // 既存のオーバーレイがあれば削除
         const existingOverlay = document.getElementById('startOverlay');
@@ -971,6 +1000,29 @@ document.getElementById('shareTwitterBtn').onclick = () => {
     }
     
     preloadImages(imageList);
+})();
+
+        // 音量トグルボタンの動作
+(function() {
+    const toggleBtn = document.getElementById('soundToggleBtn');
+    if (!toggleBtn) return;
+
+    function updateButton() {
+        if (soundEnabled) {
+            toggleBtn.textContent = 'ボイスON';
+            toggleBtn.style.background = '#555';
+        } else {
+            toggleBtn.textContent = 'ボイスOFF';
+            toggleBtn.style.background = '#999';
+        }
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        updateButton();
+    });
+
+    updateButton();
 })();
 </script>
 </body>
