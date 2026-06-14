@@ -718,7 +718,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
 <div id="startOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; display:flex; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(4px);">
     <button id="startButton" style="background:#ffaa33; border:none; font-size:2rem; font-weight:bold; padding:16px 48px; border-radius:60px; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:#2c2c2c;">▶ スタート</button>
  <button id="helpButtonStatic" style="background:#3498db; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;">遊び方</button>
-    <button id="soundToggleOverlayStatic" style="background:#555; border:none; font-size:1rem; font-weight:bold; padding:6px 20px; border-radius:48px; cursor:pointer; color:white; box-shadow:0 2px 6px rgba(0,0,0,0.2);">ボイスON</button>
+    <button id="soundToggleOverlayStatic" style="background:#555; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;">ボイスON</button>
     <div id="countdownDisplay" style="color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;"></div>
 </div>
 
@@ -817,20 +817,21 @@ document.getElementById('shareTwitterBtn').onclick = () => {
         };
                 // 音量トグルボタンを追加（ヘルプボタンの下）
         const volBtn = document.createElement('button');
-        volBtn.id = 'soundToggleOverlayBtn';
-        volBtn.style.cssText = 'background:#555; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;';
-        volBtn.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
-        volBtn.onclick = (e) => {
-            e.preventDefault();
-            soundEnabled = !soundEnabled;
-            volBtn.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
-            // 同じページ内の静的なトグルボタン（存在すれば）も同期する
-            const staticToggle = document.getElementById('soundToggleBtn');
-            if (staticToggle) {
-                staticToggle.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
-                staticToggle.style.background = soundEnabled ? '#555' : '#999';
-            }
-        };
+volBtn.id = 'soundToggleOverlayBtn';
+// ★ 背景色を soundEnabled の初期値に合わせる
+volBtn.style.cssText = `background:${soundEnabled ? '#555' : '#999'}; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;`;
+volBtn.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
+volBtn.onclick = (e) => {
+    e.preventDefault();
+    soundEnabled = !soundEnabled;
+    volBtn.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
+    volBtn.style.background = soundEnabled ? '#555' : '#999';
+    const staticToggle = document.getElementById('soundToggleBtn');
+    if (staticToggle) {
+        staticToggle.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
+        staticToggle.style.background = soundEnabled ? '#555' : '#999';
+    }
+};
         overlay.appendChild(volBtn);
         const countdownDiv = document.createElement('div');
         countdownDiv.id = 'countdownDisplay';
@@ -1043,6 +1044,39 @@ document.getElementById('shareTwitterBtn').onclick = () => {
     });
 
     updateButton();
+})();
+
+// 静的なスタートオーバーレイ内の音量ボタンにもイベントを設定
+(function() {
+    const staticOverlayBtn = document.getElementById('soundToggleOverlayStatic');
+    if (!staticOverlayBtn) return;
+
+    // ボタンの表示を現在の soundEnabled 状態に合わせる
+    function updateStaticButton() {
+        if (soundEnabled) {
+            staticOverlayBtn.textContent = 'ボイスON';
+            staticOverlayBtn.style.background = '#555';
+        } else {
+            staticOverlayBtn.textContent = 'ボイスOFF';
+            staticOverlayBtn.style.background = '#999';
+        }
+    }
+
+    // クリックで音声ON/OFFを切り替え、他のボタンと同期
+    staticOverlayBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        updateStaticButton();
+        // ステータスバーのボタンも同期
+        const toggleBtn = document.getElementById('soundToggleBtn');
+        if (toggleBtn) {
+            toggleBtn.textContent = soundEnabled ? 'ボイスON' : 'ボイスOFF';
+            toggleBtn.style.background = soundEnabled ? '#555' : '#999';
+        }
+        // 動的に作られるオーバーレイ内のボタンは、次回表示時にvolBtnの初期化で同期される
+    });
+
+    // 初期表示を同期
+    updateStaticButton();
 })();
 </script>
 </body>
