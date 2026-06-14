@@ -397,7 +397,7 @@ document.getElementById('shareTwitterBtn').onclick = () => {
             showFloatingText(clickX, clickY, `-${amount} HP`, "#aa2e1e");
         }
         if (currentHp <= 0) {
-            ();
+            endGame();  // ← 修正：() ではなく endGame() を呼ぶ
             return false;
         }
         return true;
@@ -694,8 +694,6 @@ document.getElementById('shareTwitterBtn').onclick = () => {
  <button id="helpButtonStatic" style="background:#3498db; border:none; font-size:1.2rem; font-weight:bold; padding:10px 32px; border-radius:60px; cursor:pointer; margin-top:16px; box-shadow:0 4px 15px rgba(0,0,0,0.3); color:white;">遊び方</button>
     <div id="countdownDisplay" style="color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;"></div>
 </div>
-    <div id="countdownDisplay" style="color:white; font-size:2rem; font-weight:bold; margin-top:20px; text-shadow:0 0 5px black;"></div>
-</div>
 
 <script>
 // 追加機能: スタートボタンと3秒カウントダウン（既存コードは一切変更しません）
@@ -841,86 +839,89 @@ document.getElementById('shareTwitterBtn').onclick = () => {
     }
 
     // ========== 6. ピンがステータスバーに重ならないように spawnPin を上書き ==========
-    const originalSpawnPin = spawnPin;
-    window.spawnPin = function() {
-        if (!gameActive) return;
-        
-        // ステータスバーの高さを取得（動的に変化しても対応）
-        const statusBar = document.querySelector('.status-bar');
-        let statusBarHeight = 80; // デフォルト
-        if (statusBar) {
-            statusBarHeight = statusBar.offsetHeight;
-        }
-        const minTop = statusBarHeight + 10; // 10px の余裕
-        
-        const maxLeft = Math.max(20, window.innerWidth - PIN_SIZE - 10);
-        let left = Math.random() * maxLeft;
-        // top の範囲をステータスバーの下から画面下端 - PIN_SIZE まで
-        let top = minTop + Math.random() * Math.max(20, window.innerHeight - PIN_SIZE - minTop - 20);
-        top = Math.min(top, window.innerHeight - PIN_SIZE - 15);
-        left = Math.min(left, window.innerWidth - PIN_SIZE - 10);
-        left = Math.max(8, left);
-        top = Math.max(minTop, top);
-        
-        const isDokata = Math.random() < DOKATA_PROB;
-        const pinDiv = document.createElement('div');
-        pinDiv.className = 'pin';
-        pinDiv.style.left = left + 'px';
-        pinDiv.style.top = top + 'px';
-        
-        const img = document.createElement('img');
-        if (isDokata) {
-            img.src = DOKATA_IMG_PATH;
-            img.alt = "dokata";
-            img.onerror = () => { img.src = 'https://placehold.co/400x400?text=dokata'; };
-        } else {
-            const normalImgPath = getRandomYajuImagePath();
-            img.src = normalImgPath;
-            img.alt = "yaju";
-            img.onerror = () => { img.style.background = "#c0a080"; };
-        }
-        pinDiv.appendChild(img);
-        
-        const creationTime = performance.now();
-        pinDiv.dataset.created = creationTime;
-        pinDiv.dataset.isDokata = isDokata ? "true" : "false";
-        
-        setupAutoRemoval(pinDiv, isDokata);
-        
-        const onPointerStart = (e) => {
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-                e.preventDefault();
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            e.stopPropagation();
+    // 元の spawnPin を保存（すでに定義されているはず）
+    if (typeof spawnPin !== 'undefined') {
+        const originalSpawnPin = spawnPin;
+        window.spawnPin = function() {
             if (!gameActive) return;
-            if (!pinDiv.parentNode) return;
             
-            const rect = pinDiv.getBoundingClientRect();
-            if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
-            
-            const clickX = rect.left + rect.width / 2;
-            const clickY = rect.top + rect.height / 2;
-            const isSpecial = pinDiv.dataset.isDokata === "true";
-            const timeCreated = parseFloat(pinDiv.dataset.created);
-            
-            if (isSpecial) {
-                handleDokataPinStart(pinDiv, timeCreated, clickX, clickY);
-            } else {
-                handleNormalPinStart(pinDiv, timeCreated, clickX, clickY);
+            // ステータスバーの高さを取得（動的に変化しても対応）
+            const statusBar = document.querySelector('.status-bar');
+            let statusBarHeight = 80; // デフォルト
+            if (statusBar) {
+                statusBarHeight = statusBar.offsetHeight;
             }
+            const minTop = statusBarHeight + 10; // 10px の余裕
+            
+            const maxLeft = Math.max(20, window.innerWidth - PIN_SIZE - 10);
+            let left = Math.random() * maxLeft;
+            // top の範囲をステータスバーの下から画面下端 - PIN_SIZE まで
+            let top = minTop + Math.random() * Math.max(20, window.innerHeight - PIN_SIZE - minTop - 20);
+            top = Math.min(top, window.innerHeight - PIN_SIZE - 15);
+            left = Math.min(left, window.innerWidth - PIN_SIZE - 10);
+            left = Math.max(8, left);
+            top = Math.max(minTop, top);
+            
+            const isDokata = Math.random() < DOKATA_PROB;
+            const pinDiv = document.createElement('div');
+            pinDiv.className = 'pin';
+            pinDiv.style.left = left + 'px';
+            pinDiv.style.top = top + 'px';
+            
+            const img = document.createElement('img');
+            if (isDokata) {
+                img.src = DOKATA_IMG_PATH;
+                img.alt = "dokata";
+                img.onerror = () => { img.src = 'https://placehold.co/400x400?text=dokata'; };
+            } else {
+                const normalImgPath = getRandomYajuImagePath();
+                img.src = normalImgPath;
+                img.alt = "yaju";
+                img.onerror = () => { img.style.background = "#c0a080"; };
+            }
+            pinDiv.appendChild(img);
+            
+            const creationTime = performance.now();
+            pinDiv.dataset.created = creationTime;
+            pinDiv.dataset.isDokata = isDokata ? "true" : "false";
+            
+            setupAutoRemoval(pinDiv, isDokata);
+            
+            const onPointerStart = (e) => {
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                e.stopPropagation();
+                if (!gameActive) return;
+                if (!pinDiv.parentNode) return;
+                
+                const rect = pinDiv.getBoundingClientRect();
+                if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
+                
+                const clickX = rect.left + rect.width / 2;
+                const clickY = rect.top + rect.height / 2;
+                const isSpecial = pinDiv.dataset.isDokata === "true";
+                const timeCreated = parseFloat(pinDiv.dataset.created);
+                
+                if (isSpecial) {
+                    handleDokataPinStart(pinDiv, timeCreated, clickX, clickY);
+                } else {
+                    handleNormalPinStart(pinDiv, timeCreated, clickX, clickY);
+                }
+            };
+            
+            pinDiv.addEventListener('mousedown', onPointerStart);
+            pinDiv.addEventListener('touchstart', onPointerStart, { passive: false });
+            
+            gameArea.appendChild(pinDiv);
         };
-        
-        pinDiv.addEventListener('mousedown', onPointerStart);
-        pinDiv.addEventListener('touchstart', onPointerStart, { passive: false });
-        
-        gameArea.appendChild(pinDiv);
-    };
+    }
     
     // ウインドウリサイズ時にステータスバーの高さが変わっても問題ない（次回 spawnPin で再取得）
 })();
