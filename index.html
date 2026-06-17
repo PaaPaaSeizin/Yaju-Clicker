@@ -1009,11 +1009,11 @@ volBtn.onclick = (e) => {
             img.onload = () => {
                 loadedCount++;
                 if (loadedCount === total) {
-                    console.log('全ての画像をプリロード完了');
+                    console.log('ソースコード、チラチラ見てただろ');
                 }
             };
             img.onerror = () => {
-                console.warn(`プリロード失敗: ${url}`);
+                console.warn(`画像プリロード失敗: ${url}`);
                 loadedCount++;
             };
             img.src = url;
@@ -1078,6 +1078,41 @@ volBtn.onclick = (e) => {
     // 初期表示を同期
     updateStaticButton();
 })();
+
+// ========== スペースキーでマウス位置のピンをクリック ==========
+let mouseX = 0, mouseY = 0;
+
+// マウス座標を常に更新
+document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+// スペースキーが押されたら、マウス位置のピンを擬似クリック
+window.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault(); // ページスクロール防止
+        if (!gameActive) {
+            return;
+        }
+        
+        // マウス位置の全要素を取得（pointer-eventsの影響を受けない）
+        const elements = document.elementsFromPoint(mouseX, mouseY);
+        // その中からピンを探す
+        const pinEl = elements.find(el => el.classList && el.classList.contains('pin'));
+        
+        if (pinEl) {
+            
+            // ピンに対して mousedown イベントを発火
+            const ev = new MouseEvent('mousedown', {
+                bubbles: true,
+                cancelable: true,
+                clientX: mouseX,
+                clientY: mouseY
+            });
+            pinEl.dispatchEvent(ev);
+        }    }
+});
 </script>
 </body>
 </html>
